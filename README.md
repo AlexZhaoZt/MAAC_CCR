@@ -1,45 +1,36 @@
-# Multi-Actor-Attention-Critic
-Code for [*Actor-Attention-Critic for Multi-Agent Reinforcement Learning*](https://arxiv.org/abs/1810.02912) (Iqbal and Sha, ICML 2019)
+<img src="data/logo.jpg" width=25% align="right" />
 
-## Requirements
-* Python 3.6.1 (Minimum)
-* [OpenAI baselines](https://github.com/openai/baselines), commit hash: 98257ef8c9bd23a24a330731ae54ed086d9ce4a7
-* My [fork](https://github.com/shariqiqbal2810/multiagent-particle-envs) of Multi-agent Particle Environments
-* [PyTorch](http://pytorch.org/), version: 0.3.0.post4
-* [OpenAI Gym](https://github.com/openai/gym), version: 0.9.4
-* [Tensorboard](https://github.com/tensorflow/tensorboard), version: 0.4.0rc3 and [Tensorboard-Pytorch](https://github.com/lanpa/tensorboard-pytorch), version: 1.0 (for logging)
+# Baselines
 
-The versions are just what I used and not necessarily strict requirements.
+OpenAI Baselines is a set of high-quality implementations of reinforcement learning algorithms.
 
-## How to Run
+These algorithms will make it easier for the research community to replicate, refine, and identify new ideas, and will create good baselines to build research on top of. Our DQN implementation and its variants are roughly on par with the scores in published papers. We expect they will be used as a base around which new ideas can be added, and as a tool for comparing a new approach against existing ones. 
 
-All training code is contained within `main.py`. To view options simply run:
+You can install it by typing:
 
+```bash
+git clone https://github.com/openai/baselines.git
+cd baselines
+pip install -e .
 ```
-python main.py --help
-```
-The "Cooperative Treasure Collection" environment from our paper is referred to as `fullobs_collect_treasure` in this repo, and "Rover-Tower" is referred to as `multi_speaker_listener`.
 
-In order to match our experiments, the maximum episode length should be set to 100 for Cooperative Treasure Collection and 25 for Rover-Tower.
+- [A2C](baselines/a2c)
+- [ACER](baselines/acer)
+- [ACKTR](baselines/acktr)
+- [DDPG](baselines/ddpg)
+- [DQN](baselines/deepq)
+- [GAIL](baselines/gail)
+- [PPO1](baselines/ppo1) (Multi-CPU using MPI)
+- [PPO2](baselines/ppo2) (Optimized for GPU)
+- [TRPO](baselines/trpo_mpi)
 
-## Citing our work
+To cite this repository in publications:
 
-If you use this repo in your work, please consider citing the corresponding paper:
-
-```
-@InProceedings{pmlr-v97-iqbal19a,
-  title =    {Actor-Attention-Critic for Multi-Agent Reinforcement Learning},
-  author =   {Iqbal, Shariq and Sha, Fei},
-  booktitle =    {Proceedings of the 36th International Conference on Machine Learning},
-  pages =    {2961--2970},
-  year =     {2019},
-  editor =   {Chaudhuri, Kamalika and Salakhutdinov, Ruslan},
-  volume =   {97},
-  series =   {Proceedings of Machine Learning Research},
-  address =      {Long Beach, California, USA},
-  month =    {09--15 Jun},
-  publisher =    {PMLR},
-  pdf =      {http://proceedings.mlr.press/v97/iqbal19a/iqbal19a.pdf},
-  url =      {http://proceedings.mlr.press/v97/iqbal19a.html},
-}
-```
+    @misc{baselines,
+      author = {Dhariwal, Prafulla and Hesse, Christopher and Klimov, Oleg and Nichol, Alex and Plappert, Matthias and Radford, Alec and Schulman, John and Sidor, Szymon and Wu, Yuhuai},
+      title = {OpenAI Baselines},
+      year = {2017},
+      publisher = {GitHub},
+      journal = {GitHub repository},
+      howpublished = {\url{https://github.com/openai/baselines}},
+    }

@@ -9,12 +9,16 @@ from baselines.common.vec_env import VecEnv, CloudpickleWrapper
 def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.x()
+    #print('pass')
     while True:
         cmd, data = remote.recv()
         if cmd == 'step':
             ob, reward, done, info = env.step(data)
             if all(done):
-                ob = env.reset()
+                ob = env.reset() #?
+            remote.send((ob, reward, done, info))
+        elif cmd == 'oracle_step':
+            ob, reward, done, info = env.oracle_step(data)
             remote.send((ob, reward, done, info))
         elif cmd == 'reset':
             ob = env.reset()
@@ -22,6 +26,9 @@ def worker(remote, parent_remote, env_fn_wrapper):
         elif cmd == 'reset_task':
             ob = env.reset_task()
             remote.send(ob)
+        elif cmd == 'oracle_update':
+            env.oracle_update()
+            remote.send(1)
         elif cmd == 'close':
             remote.close()
             break
@@ -33,6 +40,13 @@ def worker(remote, parent_remote, env_fn_wrapper):
                              env.agents])
             else:
                 remote.send(['agent' for _ in env.agents])
+        elif cmd == 'switch_emergency':
+            env.world.emergency_on = not env.world.emergency_on
+            remote.send(1)
+        elif cmd == 'get_collision_and_zero_out':
+            n = env.world.collision_counter
+            env.world.collision_counter = 0
+            remote.send(n)
         else:
             raise NotImplementedError
 
@@ -53,7 +67,6 @@ class SubprocVecEnv(VecEnv):
             p.start()
         for remote in self.work_remotes:
             remote.close()
-
         self.remotes[0].send(('get_spaces', None))
         observation_space, action_space = self.remotes[0].recv()
         self.remotes[0].send(('get_agent_types', None))
@@ -64,6 +77,31 @@ class SubprocVecEnv(VecEnv):
         for remote, action in zip(self.remotes, actions):
             remote.send(('step', action))
         self.waiting = True
+
+    def get_collision_and_zero_out(self):
+        for remote in self.remotes:
+            remote.send(('get_collision_and_zero_out', None))
+        return np.stack([remote.recv() for remote in self.remotes])
+    
+    def switch_emergency(self):
+        for remote in self.remotes:
+            remote.send(('switch_emergency', None))
+        ls = [remote.recv() for remote in self.remotes]
+    
+    def oracle_step_async(self, actions):
+        for remote, action in zip(self.remotes, actions):
+            remote.send(('oracle_step', action))
+        self.waiting = True
+    
+    def oracle_step_wait(self):
+        results = [remote.recv() for remote in self.remotes]
+        self.waiting = False
+        obs, rews, dones, infos = zip(*results)
+        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+    
+    def oracle_step(self, actions):
+        self.oracle_step_async(actions)
+        return self.oracle_step_wait()
 
     def step_wait(self):
         results = [remote.recv() for remote in self.remotes]
@@ -80,6 +118,11 @@ class SubprocVecEnv(VecEnv):
         for remote in self.remotes:
             remote.send(('reset_task', None))
         return np.stack([remote.recv() for remote in self.remotes])
+
+    def oracle_update(self):
+        for remote in self.remotes:
+            remote.send(('oracle_update', None))  # should we wait for finish?
+        ls = [remote.recv() for remote in self.remotes]
 
     def close(self):
         if self.closed:
